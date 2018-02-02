@@ -10,24 +10,6 @@
   vars:
     coffeeIP: "{{ lookup('env', 'COFFEEMAKER') }}"
   tasks:
-  #  - name: install maven
-  #    apt: pkg=maven state=latest update_cache=yes cache_valid_time=3600
-
-
-
-
-  #  - name: download maven
-  #    get_url:
-  #      url: http://www-eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
-  #      dest: /home/vagrant/maven.tar.gz
-  #      mode: u+rwx
-
-  #  - name: install maven
-  #    apt:
-  #      deb: /home/vagrant/maven.tar.gz
-
-
-
     - name: set the IP address of coffeemaker in webtest.java8
       lineinfile:
         path: /vagrant_data/src/src/test/java/selenium/tests/WebTest.java
