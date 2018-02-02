@@ -1,69 +1,17 @@
 ---
 - hosts: 192.168.33.15
+  become_user: root
   become: yes
-  vars:
-    packages:
-      - mysql-client
-      - mysql-common
-      - mysql-server
-      - python-mysqldb
+  become_method: sudo
   vars_prompt:
     - name: mysql_password
       prompt: "enter password for the mysql server"
+  roles:
+    - ./roles/install-mysql
+    - ./roles/install-java8
+    - ./roles/install-maven3
 
   tasks:
-    - name: set root password for MySQL
-      debconf: name='mysql-server' question='mysql-server/root_password' value='{{mysql_password | quote}}' vtype='password'
-
-    - name: confirm password
-      debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{mysql_password | quote}}' vtype='password'
-
-    - name: installing mysql
-      apt: package={{ item }} state=installed force=yes update_cache=yes cache_valid_time=3600
-      when: ansible_os_family == 'Debian'
-      with_items:
-        - mysql-server
-        - mysql-client
-        - python-mysqldb
-
-    - name: delete anonymous mysql server user
-      mysql_user: user="" state="absent" login_password="{{ mysql_password }}" login_user=root
-
-    - name: secure root user
-      mysql_user: user="root" password="{{ mysql_password }}" host="{{ item }}" login_password="{{mysql_password}}" login_user=root
-      with_items:
-        - 127.0.0.1
-        - localhost
-        - ::1
-        - "{{ ansible_fqdn }}"
-
-    - name: remove test database from mysql
-      mysql_db: db=test state=absent login_password="{{ mysql_password }}" login_user=root
-
-    - name: install add-apt-repostory
-      apt: name=software-properties-common state=latest
-
-    - name: add Java Repository(Oracle)
-      apt_repository: repo='ppa:webupd8team/java'
-
-    - name: accepting Java 8 License
-      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
-
-    - name: install Java 8
-      apt: name={{item}} state=latest
-      with_items:
-        - oracle-java8-installer
-        - ca-certificates
-        - oracle-java8-set-default
-
-    - name: adding maven repo
-      apt_repository: repo='ppa:andrei-pozolotin/maven3'
-
-    - name: install maven3
-      apt: name={{item}} state=latest
-      with_items:
-        - maven3
-
     - name: copy the hibernate file
       copy:
         #src: /home/vagrant/hibernate-template.cfg.xml
@@ -77,3 +25,11 @@
         line: '<property name="hibernate.connection.password">{{mysql_password}}</property>'
     - name: coffee run
       shell: cd /vagrant_data/CoffeeMaker && nohup mvn spring-boot:run &
+
+#    - name: adding maven repo
+#      apt_repository: repo='ppa:andrei-pozolotin/maven3'
+
+#    - name: install maven3
+#      apt: name={{item}} state=latest
+#      with_items:
+#        - maven3

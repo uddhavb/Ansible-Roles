@@ -4,5 +4,5 @@
 - hosts: all
   tasks:
     - pause:
-        prompt: "Make sure the coffeemaker app is running"
+        prompt: "Make sure the coffeemaker app is running\nClick any button to continue"
 - include: test.yml
