@@ -30,20 +30,20 @@
 
     - name: set the IP address of coffeemaker in webtest.java8
       lineinfile:
-        path: /vagrant_data/src/test/java/selenium/tests/WebTest.java
+        path: /vagrant_data/src/src/test/java/selenium/tests/WebTest.java
         regexp: 'ROOT = '
         line: '    private final String     ROOT = "http://{{coffeeIP}}:8080/";'
 
     - name: change to webtest.java to ensure that chrome runs
       lineinfile:
-        path: /vagrant_data/src/test/java/selenium/tests/WebTest.java
+        path: /vagrant_data/src/src/test/java/selenium/tests/WebTest.java
         regexp: 'driver = '
         line: 'options.addArguments( "no-sandbox");driver = new ChromeDriver( options );'
 
     - debug: msg="{{coffeeIP}} is the environment variable"
 
     - name: run the mvn tests
-      shell: cd /vagrant_data && mvn test
+      shell: cd /vagrant_data/src && mvn test
       register: result
 
     - debug: var=result.stdout_lines
