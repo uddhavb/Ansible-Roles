@@ -1,0 +1,8 @@
+---
+- include: coffee.yml
+# wait for the app to start
+- hosts: all
+  tasks:
+    - pause:
+        prompt: "Make sure the coffeemaker app is running"
+- include: test.yml

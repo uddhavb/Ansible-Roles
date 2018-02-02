@@ -1,0 +1,75 @@
+---
+- hosts: 192.168.33.25
+  become_user: root
+  become: yes
+  become_method: sudo
+  vars:
+    coffeeIP: "{{ lookup('env', 'COFFEEMAKER') }}"
+  tasks:
+  #  - name: install maven
+  #    apt: pkg=maven state=latest update_cache=yes cache_valid_time=3600
+
+    - name: add maven3 Repository
+      apt_repository: repo='deb http://ppa.launchpad.net/natecarlson/maven3/ubuntu precise main'
+    - apt: update_cache=yes cache_valid_time=3600
+    - name: install maven3
+      #shell: apt-get update && apt-get install maven3
+      shell: apt-get install maven3
+    - name: install maven2
+      apt: name='maven2' state=latest cache_valid_time=3600
+
+    - name: installing add-apt-repository
+      apt: name=software-properties-common state=latest cache_valid_time=3600
+
+    - name: Add Oracle Java Repository
+      apt_repository: repo='ppa:webupd8team/java'
+
+    - name: Accept Java 8 License
+      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+    - name: Install Oracle Java 8
+      apt: name={{item}} state=latest cache_valid_time=3600
+      with_items:
+        - oracle-java8-installer
+        - ca-certificates
+        - oracle-java8-set-default
+
+  #  - name: download maven
+  #    get_url:
+  #      url: http://www-eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+  #      dest: /home/vagrant/maven.tar.gz
+  #      mode: u+rwx
+
+  #  - name: install maven
+  #    apt:
+  #      deb: /home/vagrant/maven.tar.gz
+
+    - name: download google chrome
+      get_url:
+        url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        dest: /home/vagrant/google-chrome.deb
+        mode: u+rwx
+
+    - name: install google chrome
+      apt:
+        deb: /home/vagrant/google-chrome.deb
+
+    - name: set the IP address of coffeemaker in webtest.java8
+      lineinfile:
+        path: /vagrant_data/src/test/java/selenium/tests/WebTest.java
+        regexp: 'ROOT = '
+        line: '    private final String     ROOT = "http://{{coffeeIP}}:8080/";'
+
+    - name: change to webtest.java to ensure that chrome runs
+      lineinfile:
+        path: /vagrant_data/src/test/java/selenium/tests/WebTest.java
+        regexp: 'driver = '
+        line: 'options.addArguments( "no-sandbox");driver = new ChromeDriver( options );'
+
+    - debug: msg="{{coffeeIP}} is the environment variable"
+
+    - name: run the mvn tests
+      shell: cd /vagrant_data && mvn test
+      register: result
+
+    - debug: var=result.stdout_lines
